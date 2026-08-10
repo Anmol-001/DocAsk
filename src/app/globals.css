@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: var(--font-inter), sans-serif; /* Using Inter as default body font from layout */
+}
+
+@layer base {
+  :root {
+    --background: 257 67% 97%; /* Light Lavender #F1F0FA */
+    --foreground: 240 10% 20%; /* Darker for better contrast */
+
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 240 10% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 20%;
+
+    --primary: 247 68% 68%; /* Moderate Violet #8074E8 */
+    --primary-foreground: 0 0% 100%; /* White */
+
+    --secondary: 250 60% 93%; /* Lighter violet */
+    --secondary-foreground: 247 68% 50%; /* Darker violet for text on secondary */
+
+    --muted: 250 50% 90%; /* Slightly grayer muted */
+    --muted-foreground: 240 5% 45%; /* Muted gray text */
+
+    --accent: 353 71% 68%; /* Soft Pink #E87480 */
+    --accent-foreground: 0 0% 100%; /* White */
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 250 30% 88%; /* Light violet-gray border */
+    --input: 0 0% 100%; /* White input background */
+    --ring: 247 68% 68%; /* Primary color for rings */
+
+    --radius: 0.5rem;
+
+    --chart-1: 247 68% 68%;
+    --chart-2: 353 71% 68%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    --sidebar-background: 250 60% 96%;
+    --sidebar-foreground: 240 10% 20%;
+    --sidebar-primary: 247 68% 68%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 353 71% 68%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 250 30% 88%;
+    --sidebar-ring: 247 68% 68%;
+  }
+
+  .dark {
+    --background: 247 20% 12%; /* Dark Violet/Blue #1C1B2A */
+    --foreground: 257 30% 90%; /* Light Lavender Gray #DCD9F0 */
+
+    --card: 247 20% 16%; /* Slightly Lighter Dark Violet #232233 */
+    --card-foreground: 257 30% 90%;
+
+    --popover: 247 20% 16%;
+    --popover-foreground: 257 30% 90%;
+
+    --primary: 247 68% 75%; /* Brighter Violet #9A8EEF */
+    --primary-foreground: 247 20% 10%; /* Very Dark for contrast */
+
+    --secondary: 247 30% 25%; /* Muted Dark Violet */
+    --secondary-foreground: 257 30% 90%;
+
+    --muted: 247 25% 22%; /* Darker muted */
+    --muted-foreground: 257 20% 65%; /* Muted Lavender Gray */
+
+    --accent: 353 71% 75%; /* Brighter Pink #EF9A9A */
+    --accent-foreground: 353 20% 10%; /* Very Dark for contrast */
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 247 20% 28%; /* Dark violet border */
+    --input: 247 20% 20%; /* Dark violet input background */
+    --ring: 247 68% 75%; /* Primary color for rings */
+    
+    --chart-1: 247 68% 75%;
+    --chart-2: 353 71% 75%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    --sidebar-background: 247 20% 14%;
+    --sidebar-foreground: 257 30% 90%;
+    --sidebar-primary: 247 68% 75%;
+    --sidebar-primary-foreground: 247 20% 10%;
+    --sidebar-accent: 353 71% 75%;
+    --sidebar-accent-foreground: 353 20% 10%;
+    --sidebar-border: 247 20% 28%;
+    --sidebar-ring: 247 68% 75%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
