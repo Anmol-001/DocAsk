@@ -10,8 +10,8 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      res.status(400).json({ error: 'Name, email, and password are required' });
+    if (!email || !password) {
+      res.status(400).json({ error: 'Email and password are required' });
       return;
     }
 
@@ -33,14 +33,22 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     // Create user
     const newUser = await User.create({
-      name,
+      name: name || 'User', // default to 'User' if name is not provided
       email,
       passwordHash
     });
 
-    // Return safe user data
+    // Generate token so frontend auto-login works
+    const token = jwt.sign(
+      { sub: newUser._id.toString() },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN as any, algorithm: 'HS256' }
+    );
+
+    // Return safe user data + token
     res.status(201).json({
       message: 'User registered successfully',
+      token,
       user: {
         id: newUser._id.toString(),
         name: newUser.name,
