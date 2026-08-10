@@ -90,7 +90,7 @@ export function DocumentList({ onSelectDocument, onUploadNew }: DocumentListProp
                       {new Date(doc.createdAt).toLocaleDateString()}
                     </div>
                   </div>
-                  <div className="mt-auto">
+                  <div className="mt-auto flex justify-between items-center">
                     <span className={`text-xs px-2 py-1 rounded-full ${
                       doc.status === 'READY' ? 'bg-green-100 text-green-800' :
                       doc.status === 'PROCESSING_FAILED' ? 'bg-red-100 text-red-800' :
@@ -98,6 +98,25 @@ export function DocumentList({ onSelectDocument, onUploadNew }: DocumentListProp
                     }`}>
                       {doc.status}
                     </span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 px-2"
+                      onClick={(e) => {
+                        e.stopPropagation(); // prevent clicking the card
+                        if (confirm(`Are you sure you want to delete ${doc.fileName}? This will remove all associated conversations and data.`)) {
+                          apiClient.delete(`/documents/${doc._id}`).then(() => {
+                            setDocuments(prev => prev.filter(d => d._id !== doc._id));
+                            toast({ title: 'Document deleted' });
+                          }).catch((err: any) => {
+                            console.error(err);
+                            toast({ title: 'Failed to delete document', variant: 'destructive' });
+                          });
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

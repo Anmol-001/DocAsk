@@ -1,12 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { QAService } from '../services/qaService';
 import { requireAuth } from '../middleware/authMiddleware';
+import { qaLimiter } from '../middleware/rateLimitMiddleware';
 import mongoose from 'mongoose';
 
 const router = Router();
 const qaService = new QAService();
 
-router.post('/ask', requireAuth, async (req: Request, res: Response): Promise<void> => {
+router.post('/ask', requireAuth, qaLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
     const { documentId, question, conversationId } = req.body;
     
@@ -55,6 +56,60 @@ router.post('/ask', requireAuth, async (req: Request, res: Response): Promise<vo
     } else {
       res.status(500).json({ error: 'Internal server error processing Q&A request.' });
     }
+  }
+});
+
+router.get('/conversations/:documentId', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const documentId = req.params.documentId as string;
+    
+    if (!mongoose.Types.ObjectId.isValid(documentId)) {
+      res.status(400).json({ error: 'Invalid documentId' });
+      return;
+    }
+    
+    // Import Conversation model (assuming it's exported from models)
+    const { Conversation } = await import('../models/Conversation');
+    
+    const conversations = await Conversation.find({ 
+      userId, 
+      documentId 
+    }).sort({ createdAt: -1 });
+    
+    res.status(200).json(conversations);
+  } catch (error: any) {
+    console.error('Error fetching conversations:', error);
+    res.status(500).json({ error: 'Internal server error fetching conversations.' });
+  }
+});
+
+router.get('/conversations/:conversationId/messages', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const conversationId = req.params.conversationId as string;
+    
+    if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+      res.status(400).json({ error: 'Invalid conversationId' });
+      return;
+    }
+    
+    const { Conversation } = await import('../models/Conversation');
+    const { Message } = await import('../models/Message');
+    
+    // Verify ownership
+    const conv = await Conversation.findOne({ _id: conversationId, userId });
+    if (!conv) {
+      res.status(403).json({ error: 'Forbidden: Conversation not found or unauthorized' });
+      return;
+    }
+    
+    const messages = await Message.find({ conversationId }).sort({ createdAt: 1 });
+    
+    res.status(200).json(messages);
+  } catch (error: any) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ error: 'Internal server error fetching messages.' });
   }
 });
 

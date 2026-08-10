@@ -34,14 +34,47 @@ export function ChatView({ document }: ChatViewProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Initial welcome message
-    setMessages([
-      {
-        role: 'model',
-        text: `Hi! I've read "${document.fileName}". What would you like to know about it?`
+    const fetchHistory = async () => {
+      try {
+        setIsLoading(true);
+        const convs = await apiClient.get<any[]>(`/qa/conversations/${document._id}`);
+        if (convs && convs.length > 0) {
+          const mostRecentConv = convs[0];
+          setConversationId(mostRecentConv._id);
+          
+          const msgs = await apiClient.get<any[]>(`/qa/conversations/${mostRecentConv._id}/messages`);
+          
+          const formattedMsgs: ChatMessage[] = msgs.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            text: m.content,
+            citations: m.citations
+          }));
+          
+          setMessages(formattedMsgs);
+        } else {
+          // Initial welcome message if no history
+          setMessages([
+            {
+              role: 'model',
+              text: `Hi! I've read "${document.fileName}". What would you like to know about it?`
+            }
+          ]);
+        }
+      } catch (err) {
+        console.error("Failed to load conversation history", err);
+        setMessages([
+          {
+            role: 'model',
+            text: `Hi! I've read "${document.fileName}". What would you like to know about it?`
+          }
+        ]);
+      } finally {
+        setIsLoading(false);
       }
-    ]);
-  }, [document.fileName]);
+    };
+    
+    fetchHistory();
+  }, [document._id, document.fileName]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {

@@ -1,133 +1,113 @@
-A full-stack web application that allows users to upload PDF documents and ask questions about their content. The backend uses FastAPI and LangChain/LlamaIndex for natural language processing, while the frontend is built using React.js. The app enables seamless document analysis and Q&A interactions.
+# DocAsk
 
-🚀 Features
-✅ Functional Requirements
-PDF Upload: Upload PDF files to the server.
+DocAsk is a production-ready, full-stack web application that allows users to upload PDF documents and ask questions about them. It uses Retrieval-Augmented Generation (RAG) to provide accurate, grounded answers with citations.
 
-Text Extraction: Extracts and stores text content for NLP processing.
+## Architecture Overview
 
-Ask Questions: Users can query the content of uploaded PDFs.
+DocAsk is built on a modern, robust architecture:
 
-Contextual Answers: AI answers are based on PDF content using LlamaIndex or LangChain.
+- **Frontend:** Next.js (React), Tailwind CSS, Radix UI components (shadcn/ui).
+- **Backend:** Express.js (Node.js) with TypeScript.
+- **Database:** MongoDB Atlas (NoSQL Document Store).
+- **Vector Search:** MongoDB Atlas Vector Search for semantic retrieval.
+- **LLM Orchestration:** LangChain for prompt formatting and QA flows.
+- **AI Models:** Google Gemini (`gemini-3.6-flash` for generation, `text-embedding-004` for embeddings).
+- **Authentication:** JWT Bearer tokens securely stored in browser `sessionStorage`.
 
-Interactive UI: Upload documents, ask follow-up questions, and view responses in a clean interface.
+## Key Features
 
-📋 Non-Functional Requirements
-Usability: Clean, user-friendly frontend based on the Figma Design.
+1. **Secure Authentication:** JWT-based user registration and login.
+2. **Multi-tenant Data Isolation:** Users can only access and query their own uploaded documents.
+3. **Asynchronous Ingestion:** PDFs are parsed, chunked, and embedded in controlled batches to respect API rate limits.
+4. **Conversational Memory (Multi-turn RAG):** The AI remembers past messages within a conversation, allowing for natural follow-up questions.
+5. **Grounded QA with Citations:** The AI strictly answers based on the uploaded document and provides page-level citations for every claim.
+6. **Rate Limiting:** Public and expensive API routes are protected against abuse.
 
-Performance: Optimized file handling and response generation.
+## Prerequisites
 
-Error Handling: Graceful fallback on unsupported files or NLP failures.
+- Node.js (v18+)
+- MongoDB Atlas Cluster (M0 Free Tier is sufficient)
+- Google Gemini API Key
 
-🧰 Tech Stack
-📦 Backend
-FastAPI – API framework
+## Setup Instructions
 
-PyMuPDF / pdfminer.six – PDF text extraction
+### 1. MongoDB Atlas Vector Search Setup
 
-LangChain / LlamaIndex – NLP and context-based QA
+DocAsk requires a specific Vector Search index to retrieve relevant document chunks.
 
-SQLite / PostgreSQL – Document metadata storage
+1. Create a MongoDB Atlas cluster.
+2. Go to **Atlas Search** -> **Create Search Index**.
+3. Select **JSON Editor**.
+4. Target the `docask` database and the `documentchunks` collection.
+5. Name the index `vector_index`.
+6. Use the following JSON configuration:
 
-Local / AWS S3 – File storage
+```json
+{
+  "fields": [
+    {
+      "numDimensions": 768,
+      "path": "embedding",
+      "similarity": "cosine",
+      "type": "vector"
+    },
+    {
+      "path": "documentId",
+      "type": "filter"
+    }
+  ]
+}
+```
 
-💻 Frontend
-React.js – UI framework
+### 2. Environment Variables
 
-Axios – HTTP client for API integration
+Create a `.env` file in the root directory:
 
-TailwindCSS / CSS – Styling (based on Figma design)
+```env
+# MongoDB Connection
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/docask?retryWrites=true&w=majority
 
-🏗️ Project Structure
-pgsql
-Copy
-Edit
-pdf-qa-app/
-├── backend/
-│   ├── main.py
-│   ├── pdf_utils.py
-│   ├── nlp_engine.py
-│   ├── models.py
-│   ├── database.py
-│   └── requirements.txt
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   └── App.js
-│   ├── package.json
-│   └── tailwind.config.js
-└── README.md
-🛠️ Setup Instructions
-1. Clone the repository
-bash
-Copy
-Edit
-git clone https://github.com/your-username/pdf-qa-app.git
-cd pdf-qa-app
-2. Backend Setup (FastAPI + LangChain)
-bash
-Copy
-Edit
-cd backend
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
-uvicorn main:app --reload
-Make sure to configure API keys for any LLM or LangChain integrations in .env.
+# API Server Configuration
+PORT=3001
+NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
-3. Frontend Setup (React.js)
-bash
-Copy
-Edit
-cd frontend
+# Authentication Secrets
+JWT_SECRET=your_super_secret_jwt_key_here
+
+# Google Gemini Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_EMBEDDING_MODEL=text-embedding-004
+GEMINI_GENERATION_MODEL=gemini-3.6-flash
+```
+
+### 3. Installation
+
+Install all dependencies (the repository uses a unified package.json for convenience):
+
+```bash
 npm install
-npm run dev   # or `npm start`
-🧪 API Endpoints (FastAPI)
-Method	Endpoint	Description
-POST	/upload/	Upload a PDF file
-POST	/ask/	Ask a question about a document
-GET	/documents/	List uploaded documents
+```
 
-📂 File Upload Handling
-PDF files are stored in the local /uploads/ folder or AWS S3 (optional).
+### 4. Running the Application
 
-Text is extracted and indexed for semantic search.
+To start both the Express backend and the Next.js frontend concurrently in development mode:
 
-Metadata (filename, upload date) is saved in SQLite/PostgreSQL.
+```bash
+npm run dev
+```
 
-🧠 NLP Integration
-Uses LangChain or LlamaIndex to process document embeddings.
+- The Frontend will be available at `http://localhost:9002` (or 3000 depending on availability).
+- The Backend API will be available at `http://localhost:3001`.
 
-Answer generation is contextual to uploaded document content.
+To build and run for production:
+```bash
+npm run build
+npm run server
+```
 
-Future scalability with OpenAI, Cohere, HuggingFace models.
+## Authentication & RAG Flow
 
-🎨 UI Design
-Frontend layout based on Figma Design File
-
-Intuitive interface with:
-
-PDF upload section
-
-Question input field
-
-Answer display area
-
-⚠️ Notes
-Ensure PDF files are not encrypted or password-protected.
-
-LLM-based question answering requires an internet connection for API access (unless using a local model).
-
-For production, integrate cloud storage (e.g., AWS S3) and production-grade DB (e.g., PostgreSQL).
-
-📌 Future Improvements
-User authentication and document history
-
-Pagination and chat history for Q&A
-
-Support for multiple file types (Word, Text)
-
-Mobile responsiveness
-
+1. **Authentication:** The frontend POSTs credentials to `/api/auth/login`. The Express backend hashes the password, compares it, and issues a signed JWT. The frontend stores this in `sessionStorage` and attaches it as a `Bearer` token to all subsequent API calls.
+2. **Ingestion:** A PDF is uploaded via `FormData`. The Express backend parses it, cleans the text, splits it into chunks of 1000 characters, generates vector embeddings in batches of 100 via Gemini, and saves them to MongoDB.
+3. **Retrieval (RAG):** When a user asks a question, the backend generates an embedding for the question, executes a `$vectorSearch` aggregation in MongoDB to find the 5 most semantically similar chunks, and checks answerability.
+4. **Generation:** The context chunks and the conversation history (last 10 messages) are injected into a LangChain prompt and sent to Gemini to generate a grounded, factual answer.

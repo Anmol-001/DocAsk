@@ -115,21 +115,28 @@ export class IngestionService {
           // Extract text arrays
           const textsToEmbed = insertedChunks.map(chunk => chunk.text);
           
-          // Generate embeddings via EmbeddingService
-          const embeddings = await this.embeddingService.generateEmbeddings(textsToEmbed);
+          // Generate embeddings via EmbeddingService in batches
+          const batchSize = 100;
+          let allEmbeddings: number[][] = [];
           
-          if (embeddings.length === insertedChunks.length) {
+          for (let i = 0; i < textsToEmbed.length; i += batchSize) {
+             const batch = textsToEmbed.slice(i, i + batchSize);
+             const batchEmbeddings = await this.embeddingService.generateEmbeddings(batch);
+             allEmbeddings = allEmbeddings.concat(batchEmbeddings);
+          }
+          
+          if (allEmbeddings.length === insertedChunks.length) {
             // Bulk update chunks with their embeddings
             const bulkOps = insertedChunks.map((chunk, index) => ({
               updateOne: {
                 filter: { _id: chunk._id },
-                update: { $set: { embedding: embeddings[index] } }
+                update: { $set: { embedding: allEmbeddings[index] } }
               }
             }));
             await DocumentChunk.bulkWrite(bulkOps);
           } else {
              // If array sizes mismatch or API returned empty array (e.g. missing keys)
-             if (embeddings.length > 0) {
+             if (allEmbeddings.length > 0) {
                  throw new Error("Mismatch between chunks and generated embeddings count.");
              }
           }

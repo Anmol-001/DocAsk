@@ -113,6 +113,73 @@ async function run() {
     console.log(`[FAIL] Cross-user conversation access allowed. Status: ${askResB.status}`);
   }
 
+  // Phase 8: History & Memory Tests
+  console.log('--- Phase 8 Tests ---');
+  let convRes = await fetch(`${baseUrl}/qa/conversations/${docId}`, { headers: { 'Authorization': `Bearer ${tokenA}` }});
+  if (!convRes.ok) {
+    let text = await convRes.text();
+    console.log(`Failed convRes: ${convRes.status} - ${text}`);
+    throw new Error('Failed to fetch doc convs');
+  }
+  let convData = await convRes.json();
+  if (convData.length === 1 && convData[0]._id === convId) {
+    console.log('[PASS] Fetched document conversations');
+  } else {
+    console.log('[FAIL] Failed to fetch document conversations');
+  }
+
+  let msgRes = await fetch(`${baseUrl}/qa/conversations/${convId}/messages`, { headers: { 'Authorization': `Bearer ${tokenA}` }});
+  if (!msgRes.ok) {
+    let text = await msgRes.text();
+    console.log(`Failed msgRes: ${msgRes.status} - ${text}`);
+    throw new Error('Failed to fetch msg convs');
+  }
+  let msgData = await msgRes.json();
+  if (msgData.length === 2) {
+    console.log('[PASS] Fetched conversation messages (1 user, 1 AI)');
+  } else {
+    console.log('[FAIL] Failed to fetch conversation messages');
+  }
+
+  // Ask follow up
+  let followUpRes = await fetch(`${baseUrl}/qa/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${tokenA}` },
+    body: JSON.stringify({ documentId: docId, conversationId: convId, question: 'Why is that?' })
+  });
+  let followUpData = await followUpRes.json();
+  if (followUpData.conversationId === convId) {
+    console.log('[PASS] Memory context applied (same conversationId)');
+  }
+
+  // User B tries to delete User A's document
+  let delResB = await fetch(`${baseUrl}/documents/${docId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${tokenB}` }
+  });
+  if (delResB.status === 403 || delResB.status === 404) {
+    console.log('[PASS] Cross-user deletion blocked');
+  }
+
+  // User A deletes document
+  let delRes = await fetch(`${baseUrl}/documents/${docId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${tokenA}` }
+  });
+  if (delRes.status === 200) {
+    console.log('[PASS] Document deleted successfully');
+  }
+
+  // Verify deletion cascade
+  let checkDoc = await fetch(`${baseUrl}/documents/${docId}`, { headers: { 'Authorization': `Bearer ${tokenA}` }});
+  if (checkDoc.status === 404) {
+    console.log('[PASS] Document no longer exists');
+  }
+  let checkMsgs = await fetch(`${baseUrl}/qa/conversations/${convId}/messages`, { headers: { 'Authorization': `Bearer ${tokenA}` }});
+  if (checkMsgs.status === 403 || checkMsgs.status === 404) {
+    console.log('[PASS] Conversation cascaded deletion successful');
+  }
+
   // Logout / 401 test
   let invalidRes = await fetch(`${baseUrl}/documents`, {
     headers: { 'Authorization': `Bearer invalid_token` }

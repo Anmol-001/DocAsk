@@ -79,4 +79,16 @@ export const apiClient = {
     });
     return handleResponse(response);
   },
+
+  /**
+   * Performs a DELETE request to the backend.
+   */
+  async delete<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+      ...options,
+      headers: getHeaders(false, options?.headers),
+    });
+    return handleResponse(response);
+  },
 };

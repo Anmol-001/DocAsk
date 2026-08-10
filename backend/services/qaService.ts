@@ -93,6 +93,11 @@ export class QAService {
 
     let answerableResult = { isAnswerable: false, reason: 'No context found' };
 
+    // Fetch conversation history (last 10 messages)
+    const history = await Message.find({ conversationId: activeConversationId })
+      .sort({ createdAt: 1 })
+      .limit(10); // Limit to prevent massive prompts
+
     if (uniqueChunks.length > 0) {
       // 5. Answerability Check
       answerableResult = await this.checkAnswerability(question, combinedContext);
@@ -108,8 +113,8 @@ export class QAService {
     }));
 
     if (answerableResult.isAnswerable) {
-      // 6. Generate Grounded Answer
-      finalContent = await this.generateAnswer(question, combinedContext);
+      // 6. Generate Grounded Answer (passing history)
+      finalContent = await this.generateAnswer(question, combinedContext, history);
     }
 
     // 7. Save AI Message
@@ -163,13 +168,25 @@ Question: ${question}`;
     }
   }
 
-  private async generateAnswer(question: string, context: string): Promise<string> {
+  private async generateAnswer(question: string, context: string, history: any[] = []): Promise<string> {
+    let historyText = "";
+    if (history && history.length > 0) {
+      // Exclude the very last message since it is the current question
+      const pastMessages = history.slice(0, -1);
+      if (pastMessages.length > 0) {
+        historyText = "Conversation History:\n" + pastMessages.map(msg => 
+          `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
+        ).join('\n') + "\n\n";
+      }
+    }
+
     const prompt = `You are a helpful, factual AI assistant. Answer the user's question using strictly the provided document context.
 - Do NOT invent facts.
 - Do NOT use outside knowledge.
 - If the context does not fully answer the question, state what is missing.
+- Use the conversation history for context on pronouns or references (like "what about that?").
 
-Context:
+${historyText}Context:
 ${context}
 
 Question: ${question}`;
