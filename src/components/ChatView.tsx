@@ -93,7 +93,7 @@ export function ChatView({ document }: ChatViewProps) {
 
     try {
       const response = await apiClient.post<{ 
-        answer: string, 
+        content: string, 
         citations?: Citation[],
         conversationId: string 
       }>('/qa/ask', {
@@ -108,7 +108,7 @@ export function ChatView({ document }: ChatViewProps) {
 
       setMessages(prev => [...prev, { 
         role: 'model', 
-        text: response.answer,
+        text: response.content,
         citations: response.citations
       }]);
 

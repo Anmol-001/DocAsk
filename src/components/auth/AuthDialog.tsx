@@ -15,10 +15,18 @@ interface AuthDialogProps {
   children?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  defaultTab?: 'login' | 'register';
 }
 
-export function AuthDialog({ children, open, onOpenChange }: AuthDialogProps) {
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+export function AuthDialog({ children, open, onOpenChange, defaultTab = 'login' }: AuthDialogProps) {
+  const [activeTab, setActiveTab] = React.useState<'login' | 'register'>(defaultTab);
+  
+  React.useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);

@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileUp, LogOut } from 'lucide-react';
+import { FileUp, LogOut, FileText } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { AuthDialog } from '@/components/auth/AuthDialog';
 
 interface AppHeaderProps {
   pdfName?: string | null;
   onUploadNew?: () => void;
+  onGoToDocuments?: () => void;
   isPdfLoaded?: boolean;
 }
 
-export function AppHeader({ pdfName, onUploadNew, isPdfLoaded }: AppHeaderProps) {
+export function AppHeader({ pdfName, onUploadNew, onGoToDocuments, isPdfLoaded }: AppHeaderProps) {
   const { isAuthenticated, logout } = useAuth();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
@@ -29,6 +30,12 @@ export function AppHeader({ pdfName, onUploadNew, isPdfLoaded }: AppHeaderProps)
         <div className="flex flex-1 items-center justify-end space-x-2">
           {isAuthenticated ? (
             <>
+              <Button variant="ghost" asChild onClick={onGoToDocuments}>
+                <a href="#your-documents">
+                  <FileText className="mr-2 h-4 w-4" />
+                  Your Documents
+                </a>
+              </Button>
               {isPdfLoaded && onUploadNew && (
                 <>
                   {pdfName && <span className="text-sm text-muted-foreground hidden md:block truncate max-w-xs" title={pdfName}>{pdfName}</span>}

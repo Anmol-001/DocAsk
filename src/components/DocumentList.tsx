@@ -59,7 +59,7 @@ export function DocumentList({ onSelectDocument, onUploadNew }: DocumentListProp
   }
 
   return (
-    <Card className="w-full max-w-4xl shadow-xl">
+    <Card id="your-documents" className="w-full max-w-4xl shadow-xl scroll-mt-20">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="font-headline text-3xl">Your Documents</CardTitle>
